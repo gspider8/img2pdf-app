@@ -1,6 +1,27 @@
+var express = require('express');
+var router = express.Router();
+var path = require('path');
+
+//create a '/' GET route that'll return the index.html file stored in the public/html folder
+/*router.get('/', function(req, res, next) {
+  res.sendFile(path.join(__dirname, '..','/public/html/index.html'));
+}); */
+
+router.get('/', function(req, res, next) {
+  // if there are no image filenames in a session, return the normal HTML page
+  if (req.session.imagefiles === undefined) {
+    res.sendFile(path.join(__dirname, '..', '/public/html/index.html'));
+  } else {
+    // if there are image filenames stored in a session, render them in an index.jade file
+    res.render('index', {images: req.session.imagefiles})
+  }
+});
+module.exports = router;
+
+
 //import the multer library
 var multer = require('multer')
-var path = require('path')
+//var path = require('path')
 
 //multer file storage configuration
 let storage = multer.diskStorage({
@@ -29,6 +50,7 @@ let fileFilter = (req, file, callback) => {
 // initialize Multer with the configurations for storage and file filter 
 var upload = multer({storage, fileFilter: fileFilter});
 
+// error here
 router.post('/upload', upload.array('images'), function(req, res) {
   let files = req.files
   let imgNames = [];
@@ -46,29 +68,5 @@ router.post('/upload', upload.array('images'), function(req, res) {
   res.redirect('/')
 })
 
-router.get('/', function(req, res, next) {
-  // if there are no image filenames in a session, return the normal HTML page
-  if (req.session.imagefiles === undefined) {
-    res.sendFile(path.join(__dirname, '..', '/public/html/index.html'));
-  } else {
-    // if there are image filenames stored in a session, render them in an index.jade file
-    res.render('index', {images: req.session.imagefiles})
-  }
-});
 
 
-/*
-
-var express = require('express');
-var router = express.Router();
-
-var path = require('path');
-
-//create a '/' GET route that'll return the index.html file stored in the public/html folder
-router.get('/', function(req, res, next) {
-  res.sendFile(path.join(__dirname, '..','/public/html/index.html'));
-}); 
-
-module.exports = router;
-
-*/
