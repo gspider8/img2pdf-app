@@ -41,6 +41,7 @@ convertButton.onclick = function(){
         
         // display the convert and download button
         convertText.style.display = 'inline-block'
+        downloadButton.style.display = 'inline-block'
 
         // attach the address to the download button
         downloadButton.href = data

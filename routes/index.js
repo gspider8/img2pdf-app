@@ -101,3 +101,25 @@ router.post('/pdf', function(req, res, next) {
   //Send the address back to the browser
   res.send(`/pdf/${pdfName}`)
 })
+
+//check line 73
+
+/* NEW + BUTTON */
+
+router.get("/new", function(req, res, next) {
+  // delete the files stored in the session
+  let filenames = req.session.imagefiles;
+  
+  let deleteFiles = async (paths) => {
+    let deleting = paths.map( (file) => 
+      unlink(path.join(__dirname, "..", `/public/images/${file}`) ) 
+    )
+  }
+  deleteFiles(filenames)
+
+  // Remove the data from the session
+  req.session.imagefiles = undefined
+
+  // Redirect to the roor URL
+  res.redirect("/")
+})
