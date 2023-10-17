@@ -1,11 +1,14 @@
 var express = require('express');
 var router = express.Router();
-var path = require('path');
 
-//create a '/' GET route that'll return the index.html file stored in the public/html folder
-/*router.get('/', function(req, res, next) {
-  res.sendFile(path.join(__dirname, '..','/public/html/index.html'));
-}); */
+var path = require('path');
+var multer = require('multer')
+var PDFDocument = require('pdfkit');
+var fs = require('fs');
+
+var {unlink} = require('fs/promises');
+
+/* GET home page*/ 
 
 router.get('/', function(req, res, next) {
   // if there are no image filenames in a session, return the normal HTML page
@@ -16,12 +19,6 @@ router.get('/', function(req, res, next) {
     res.render('index', {images: req.session.imagefiles})
   }
 });
-module.exports = router;
-
-
-//import the multer library
-var multer = require('multer')
-//var path = require('path')
 
 //multer file storage configuration
 let storage = multer.diskStorage({
@@ -50,31 +47,29 @@ let fileFilter = (req, file, callback) => {
 // initialize Multer with the configurations for storage and file filter 
 var upload = multer({storage, fileFilter: fileFilter});
 
-// error here
 router.post('/upload', upload.array('images'), function(req, res) {
-  let files = req.files
-  let imgNames = [];
+  if (req.files.length === 0) {
+    res.redirect('/')
 
-  // extract the filenames
-  for (i of files) {
-    let index = Object.keys(i).findIndex( function(e){return e === 'filename'})
-    imgNames.push(Object.values(i)[index])
+  } else {
+    let files = req.files
+    let imgNames = [];
+
+    // extract the filenames
+    for (i of files) {
+      let index = Object.keys(i).findIndex( function(e){return e === 'filename'})
+      imgNames.push(Object.values(i)[index])
+    }
+
+    // store the image filenames in a session 
+    req.session.imagefiles = imgNames
+    
+    // redirect the request to the root URL route
+    res.redirect('/')
   }
-
-  // strotr the image filenames in a session 
-  req.session.imagefiles = imgNames
-  
-  // redirect the request to the root URL route
-  res.redirect('/')
 })
 
 /* PDF ROUTE */
-
-//var path = require('path');
-var fs = require('fs');
-
-// Import PDFkit
-var PDFDocument = require('pdfkit');
 
 router.post('/pdf', function(req, res, next) {
   let body = req.body
@@ -102,18 +97,17 @@ router.post('/pdf', function(req, res, next) {
   res.send(`/pdf/${pdfName}`)
 })
 
-//check line 73
+/* NEW + ROUTE */
 
-/* NEW + BUTTON */
-
-router.get("/new", function(req, res, next) {
+router.get('/new', function(req, res, next) {
   // delete the files stored in the session
+  console.log("new button pressed")
   let filenames = req.session.imagefiles;
   
   let deleteFiles = async (paths) => {
     let deleting = paths.map( (file) => 
-      unlink(path.join(__dirname, "..", `/public/images/${file}`) ) 
-    )
+      unlink(path.join( __dirname, "..", `/public/images/${file}`)))
+    await Promise.all(deleting)
   }
   deleteFiles(filenames)
 
@@ -123,3 +117,5 @@ router.get("/new", function(req, res, next) {
   // Redirect to the roor URL
   res.redirect("/")
 })
+
+module.exports = router;
