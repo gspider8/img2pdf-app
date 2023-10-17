@@ -68,5 +68,36 @@ router.post('/upload', upload.array('images'), function(req, res) {
   res.redirect('/')
 })
 
+/* PDF ROUTE */
 
+//var path = require('path');
+var fs = require('fs');
 
+// Import PDFkit
+var PDFDocument = require('pdfkit');
+
+router.post('/pdf', function(req, res, next) {
+  let body = req.body
+
+  // Create a new pdf
+  let doc = new PDFDocument({size: 'A4', autoFirstPage: false})
+  let pdfName = "pdf-" + Date.now() + ".pdf"
+
+  // Store the pdf in the public/pdf folder
+  doc.pipe( fs.createWriteStream( path.join(__dirname, "..",`/public/pdf/${pdfName}`) ) );
+
+  //create the pdf pages and add the images
+  for (let name of body) {
+    doc.addPage()
+    doc.image(
+      path.join(__dirname, "..", `/public/images/${name}`), 
+      20, 20, {width: 555.28, align: "center", valign: "center"}
+    )
+  }
+
+  // End the process
+  doc.end();
+
+  //Send the address back to the browser
+  res.send(`/pdf/${pdfName}`)
+})
